@@ -1,7 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
 import App from "./App.tsx";
+import { TodoProvider } from "./context/TodoContext.tsx";
+import "./index.css";
 
 const root = document.getElementById("root");
 
@@ -11,6 +12,8 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <TodoProvider>
+      <App />
+    </TodoProvider>
   </StrictMode>,
 );
