@@ -4,6 +4,11 @@
   "files": {
     "includes": ["**", "!!**/dist", "!!**/.yarn", "!!**/node_modules"]
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2 },
   "assist": {
     "enabled": true,
