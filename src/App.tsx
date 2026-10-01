@@ -1,6 +1,6 @@
 import "./App.css";
 import { BrowserRouter, Route, Routes } from "react-router";
-import Collections from "./Collections";
+import Archive from "./Archive";
 import Home from "./Home";
 import Settings from "./Settings";
 
@@ -9,7 +9,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route index element={<Home />} />
-        <Route path="collections" element={<Collections />} />
+        <Route path="Archive" element={<Archive />} />
         <Route path="settings" element={<Settings />} />
       </Routes>
     </BrowserRouter>

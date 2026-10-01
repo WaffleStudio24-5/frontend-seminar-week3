@@ -167,6 +167,15 @@ function loadSchedules(
 type HomeScheduleStore = {
   schedules: Schedule[];
   addSchedule: (schedule: Omit<Schedule, "id">) => void;
+  editSchedule: (schedule: Schedule) => void;
+  deleteSchedule: (scheduleId: number) => void;
+};
+
+type ArchiveScheduleStore = {
+  schedules: Schedule[];
+  addSchedule: (schedule: Omit<Schedule, "id">) => void;
+  editSchedule: (schedule: Schedule) => void;
+  deleteSchedule: (scheduleId: number) => void;
 };
 
 type SettingsStore = {
@@ -233,24 +242,90 @@ export const useSettings = create<SettingsStore>((set) => ({
     }),
 }));
 const initialCategories = loadCategories();
+const initialHomeSchedules = loadSchedules(
+  HOME_SCHEDULE_KEY,
+  initialCategories,
+);
+const initialArchiveSchedules = loadSchedules(
+  ARCHIVE_SCHEDULE_KEY,
+  initialCategories,
+);
+
+function getNextScheduleId() {
+  const allScheduleIds = [
+    ...useHomeSchedules.getState().schedules,
+    ...useArchiveSchedules.getState().schedules,
+  ].map((schedule) => schedule.id);
+
+  return Math.max(0, ...allScheduleIds) + 1;
+}
 
 export const useCategories = create<{ categories: Category[] }>(() => ({
   categories: initialCategories,
 }));
 export const useHomeSchedules = create<HomeScheduleStore>((set) => ({
-  schedules: loadSchedules(HOME_SCHEDULE_KEY, initialCategories),
+  schedules: initialHomeSchedules,
   addSchedule: (schedule) =>
     set((state) => {
-      const id = Math.max(0, ...state.schedules.map((item) => item.id)) + 1;
+      const id = getNextScheduleId();
       const schedules = [...state.schedules, { ...schedule, id }];
 
       localStorage.setItem(HOME_SCHEDULE_KEY, JSON.stringify(schedules));
 
       return { schedules };
     }),
+  editSchedule: (newSchedule: Schedule) =>
+    set((state) => {
+      const schedules = state.schedules.map((schedule) =>
+        schedule.id === newSchedule.id ? newSchedule : schedule,
+      );
+
+      localStorage.setItem(HOME_SCHEDULE_KEY, JSON.stringify(schedules));
+
+      return { schedules };
+    }),
+  deleteSchedule: (targetScheduleId: number) =>
+    set((state) => {
+      const schedules = state.schedules.filter(
+        (schedule) => schedule.id !== targetScheduleId,
+      );
+
+      localStorage.setItem(HOME_SCHEDULE_KEY, JSON.stringify(schedules));
+
+      return { schedules };
+    }),
 }));
-export const useArchiveSchedules = create<{ schedules: Schedule[] }>(() => ({
-  schedules: loadSchedules(ARCHIVE_SCHEDULE_KEY, initialCategories),
+export const useArchiveSchedules = create<ArchiveScheduleStore>((set) => ({
+  schedules: initialArchiveSchedules,
+  addSchedule: (schedule) =>
+    set((state) => {
+      const id = getNextScheduleId();
+      const schedules = [...state.schedules, { ...schedule, id }];
+
+      localStorage.setItem(HOME_SCHEDULE_KEY, JSON.stringify(schedules));
+
+      return { schedules };
+    }),
+  editSchedule: (newSchedule) =>
+    set((state) => {
+      const schedules = state.schedules.map((schedule) =>
+        schedule.id === newSchedule.id ? newSchedule : schedule,
+      );
+
+      localStorage.setItem(ARCHIVE_SCHEDULE_KEY, JSON.stringify(schedules));
+
+      return { schedules };
+    }),
+  deleteSchedule: (targetScheduleId) =>
+    set((state) => {
+      const schedules = state.schedules.filter(
+        (schedule) => schedule.id !== targetScheduleId,
+      );
+
+      localStorage.setItem(ARCHIVE_SCHEDULE_KEY, JSON.stringify(schedules));
+
+      return { schedules };
+    }),
 }));
 
 const initialNewScheduleDraft = loadNewScheduleDraft();

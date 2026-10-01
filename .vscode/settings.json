@@ -7,5 +7,6 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.biome": "always",
     "source.organizeImports.biome": "always"
-  }
+  },
+  "tailwindCSS.experimental.configFile": "src/App.css"
 }

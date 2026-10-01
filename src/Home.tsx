@@ -2,12 +2,16 @@ import type { Schedule } from "./constants";
 import Head from "./Head";
 import NewScheduleModal from "./NewScheduleModal";
 import {
+  useArchiveSchedules,
   useCategories,
   useHomeSchedules,
   useNewScheduleDraft,
 } from "./storage";
 
 function HomeScheduleCard({ schedule }: { schedule: Schedule }) {
+  const editSchedule = useHomeSchedules((state) => state.editSchedule);
+  const deleteSchedule = useHomeSchedules((state) => state.deleteSchedule);
+  const archiveSchedule = useArchiveSchedules((state) => state.addSchedule);
   const categories = useCategories((state) => state.categories);
   const category = categories.find((category) => {
     return category.id === schedule.category;
@@ -15,9 +19,29 @@ function HomeScheduleCard({ schedule }: { schedule: Schedule }) {
 
   return (
     <div className="schedule-card">
-      <input type="checkbox" checked={schedule.isDone} />
+      <input
+        type="checkbox"
+        checked={schedule.isDone}
+        onChange={(event) =>
+          editSchedule({
+            ...schedule,
+            isDone: event.target.checked,
+            doneDate: new Date(Date.now()),
+          })
+        }
+      />
       <p>{schedule.name}</p>
-      {schedule.isDone && <button type="button">보관하기</button>}
+      {schedule.isDone && (
+        <button
+          type="button"
+          onClick={() => {
+            archiveSchedule(schedule);
+            deleteSchedule(schedule.id);
+          }}
+        >
+          보관하기
+        </button>
+      )}
       {category && (
         <span className="schedule-card-category">{category.name}</span>
       )}
@@ -29,9 +53,16 @@ function HomeSchedules() {
   const schedules = useHomeSchedules((state) => state.schedules);
   return (
     <section id="schedules">
-      {schedules.map((schedule) => (
-        <HomeScheduleCard key={schedule.id} schedule={schedule} />
-      ))}
+      {schedules.length === 0 ? (
+        <>
+          <p>할 일이 비어 있습니다</p>
+          <p>오른쪽 아래의 + 버튼을 눌러 할 일을 추가해 보세요.</p>
+        </>
+      ) : (
+        schedules.map((schedule) => (
+          <HomeScheduleCard key={schedule.id} schedule={schedule} />
+        ))
+      )}
     </section>
   );
 }

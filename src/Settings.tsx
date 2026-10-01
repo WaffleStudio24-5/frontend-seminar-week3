@@ -44,7 +44,7 @@ function DarkModeSwitch() {
 }
 
 function OpenArchiveButton() {
-  return <Link to="/collections">보관함 열기</Link>;
+  return <Link to="/Archive">보관함 열기</Link>;
 }
 
 function ResetDataButton({ descriptionId }: { descriptionId: string }) {

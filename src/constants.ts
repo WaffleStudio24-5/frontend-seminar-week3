@@ -1,5 +1,5 @@
 /* 페이지 */
-export type Pages = "home" | "collections" | "settings";
+export type Pages = "home" | "archive" | "settings";
 
 /* 카테고리 */
 export type Category = {
