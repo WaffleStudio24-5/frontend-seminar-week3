@@ -92,7 +92,7 @@ function SettingCard({ setting }: { setting: Setting }) {
 function Settings() {
   return (
     <>
-      <Head page="settings" />
+      <Head />
       <main>
         <h2>설정</h2>
         {settings.map((setting) => (

@@ -69,7 +69,7 @@ function Archive() {
   const schedules = useArchiveSchedules((state) => state.schedules);
   return (
     <>
-      <Head page="archive" />
+      <Head />
       <h2>보관함</h2>
       <div>완료 후 보관한 할 일 {schedules.length}개</div>
       <ArchivedSchedules />
