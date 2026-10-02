@@ -1,6 +1,31 @@
+import { useState } from "react";
 import { Link } from "react-router";
-import Head from "./Head";
-import { resetApplicationData, useSettings } from "./storage";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "@/components/ui/toast";
+import { cyanSurfaceVariants } from "./lib/app-variants";
+import { cn } from "./lib/utils";
+import Head from "./components/Head";
+import { useTheme } from "./components/ThemeProvider";
+import { resetApplicationData } from "./storage";
 
 type Setting = {
   key: "dark-mode" | "open-archive" | "clear-storage";
@@ -28,51 +53,85 @@ const settings: Setting[] = [
 ];
 
 function DarkModeSwitch() {
-  const isDark = useSettings((state) => state.settings.get("isDark") === true);
-  const updateIsDark = useSettings((state) => state.updateIsDark);
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
-    <label>
-      <input
-        type="checkbox"
-        checked={isDark}
-        onChange={(event) => updateIsDark(event.target.checked)}
-      />
-      다크 모드 사용
-    </label>
+    <Switch
+      checked={isDark}
+      onCheckedChange={(value) => setTheme(value ? "dark" : "light")}
+      className="border-2 cursor-pointer"
+    />
   );
 }
 
 function OpenArchiveButton() {
-  return <Link to="/Archive">보관함 열기</Link>;
-}
-
-function ResetDataButton({ descriptionId }: { descriptionId: string }) {
   return (
-    <button
-      type="button"
-      aria-describedby={descriptionId}
-      onClick={resetApplicationData}
+    <Button
+      className="bg-gray-400 hover:bg-gray-300 text-black"
+      render={<Link to="/Archive" />}
     >
-      초기화
-    </button>
+      보관함 열기
+    </Button>
   );
 }
 
-function SettingControl({
-  settingKey,
-  descriptionId,
-}: {
-  settingKey: Setting["key"];
-  descriptionId: string;
-}) {
+function ResetDataButton() {
+  const [open, setOpen] = useState(false);
+  const { setTheme } = useTheme();
+
+  return (
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger
+        render={
+          <Button
+            variant="destructive"
+            className="bg-red-200 hover:bg-red-300 text-red-800
+            dark:bg-red-300 dark:hover:bg-red-500 dark:hover:text-red-950 cursor-pointer"
+          />
+        }
+      >
+        초기화
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>정말로 초기화하시겠습니까?</AlertDialogTitle>
+          <AlertDialogDescription>
+            저장된 모든 일정과 설정을 초기화합니다. 이 동작은 취소할 수
+            없습니다.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="cursor-pointer">취소</AlertDialogCancel>
+          <AlertDialogAction
+            className="cursor-pointer"
+            onClick={() => {
+              resetApplicationData();
+              setTheme("light");
+              setOpen(false);
+              toast.add({
+                type: "success",
+                description: "데이터를 초기화했습니다.",
+                timeout: 5000,
+              });
+            }}
+          >
+            초기화
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function SettingControl({ settingKey }: { settingKey: Setting["key"] }) {
   switch (settingKey) {
     case "dark-mode":
       return <DarkModeSwitch />;
     case "open-archive":
       return <OpenArchiveButton />;
     case "clear-storage":
-      return <ResetDataButton descriptionId={descriptionId} />;
+      return <ResetDataButton />;
   }
 }
 
@@ -81,11 +140,20 @@ function SettingCard({ setting }: { setting: Setting }) {
   const descriptionId = `${setting.key}-description`;
 
   return (
-    <section className="setting-card" aria-labelledby={titleId}>
-      <h3 id={titleId}>{setting.title}</h3>
-      <p id={descriptionId}>{setting.description}</p>
-      <SettingControl settingKey={setting.key} descriptionId={descriptionId} />
-    </section>
+    <Item
+      className={cn(cyanSurfaceVariants(), "items-center border-accent")}
+      aria-labelledby={titleId}
+    >
+      <ItemContent className="min-w-0 basis-full sm:basis-auto">
+        <ItemTitle id={titleId}>{setting.title}</ItemTitle>
+        <ItemDescription id={descriptionId} className="line-clamp-none break-words">
+          {setting.description}
+        </ItemDescription>
+      </ItemContent>
+      <ItemActions className="basis-full justify-end sm:basis-auto">
+        <SettingControl settingKey={setting.key} />
+      </ItemActions>
+    </Item>
   );
 }
 

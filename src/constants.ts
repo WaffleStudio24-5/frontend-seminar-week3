@@ -24,6 +24,3 @@ export type Schedule = {
   isDone: boolean;
   doneDate: null | Date;
 };
-
-/* 설정 */
-export const defaultSettings = new Map([["isDark", false]]);

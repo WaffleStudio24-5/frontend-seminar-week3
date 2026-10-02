@@ -2,11 +2,9 @@ import { create } from "zustand";
 import {
   type Category,
   defaultCategories,
-  defaultSettings,
   type Schedule,
 } from "./constants";
 
-const SETTING_KEY = "waffle-kdh-todo-settings";
 const CATEGORY_KEY = "waffle-kdh-todo-categories";
 const HOME_SCHEDULE_KEY = "waffle-kdh-todo-home-schedules";
 const ARCHIVE_SCHEDULE_KEY = "waffle-kdh-todo-archive-schedules";
@@ -39,41 +37,6 @@ function repairDuplicateIds<T extends { id: number }>(
 
     return { ...item, id: nextId++ };
   });
-}
-
-function loadSettings() {
-  const settingStroage = localStorage.getItem(SETTING_KEY);
-  if (settingStroage === null) return defaultSettings;
-
-  try {
-    const parsedSettings: unknown = JSON.parse(settingStroage);
-    if (
-      !Array.isArray(parsedSettings) ||
-      !parsedSettings.every(
-        (entry): entry is [string, unknown] =>
-          Array.isArray(entry) &&
-          entry.length === 2 &&
-          typeof entry[0] === "string",
-      )
-    ) {
-      return defaultSettings;
-    }
-
-    const settings = new Map(parsedSettings);
-
-    for (const key of defaultSettings.keys()) {
-      if (
-        !settings.has(key) ||
-        typeof settings.get(key) !== typeof defaultSettings.get(key)
-      ) {
-        settings.set(key, defaultSettings.get(key));
-      }
-    }
-
-    return settings;
-  } catch {
-    return defaultSettings;
-  }
 }
 
 function loadCategories() {
@@ -178,19 +141,16 @@ type ArchiveScheduleStore = {
   deleteSchedule: (scheduleId: number) => void;
 };
 
-type SettingsStore = {
-  settings: Map<string, unknown>;
-  updateIsDark: (isDark: boolean) => void;
-};
-
 type NewScheduleDraft = {
   isAdding: boolean;
   name: string;
   category: number | null;
+  editingScheduleId: number | null;
 };
 
 type NewScheduleDraftStore = NewScheduleDraft & {
   open: () => void;
+  edit: (schedule: Schedule) => void;
   close: () => void;
   updateName: (name: string) => void;
   updateCategory: (category: number) => void;
@@ -200,7 +160,12 @@ type NewScheduleDraftStore = NewScheduleDraft & {
 function loadNewScheduleDraft(): NewScheduleDraft {
   const draftStorage = sessionStorage.getItem(NEW_SCHEDULE_DRAFT_KEY);
   if (draftStorage === null) {
-    return { isAdding: false, name: "", category: null };
+    return {
+      isAdding: false,
+      name: "",
+      category: null,
+      editingScheduleId: null,
+    };
   }
 
   try {
@@ -219,28 +184,22 @@ function loadNewScheduleDraft(): NewScheduleDraft {
         isAdding: draft.isAdding,
         name: draft.name,
         category: draft.category,
+        editingScheduleId:
+          "editingScheduleId" in draft &&
+          typeof draft.editingScheduleId === "number"
+            ? draft.editingScheduleId
+            : null,
       };
     }
   } catch {}
 
-  return { isAdding: false, name: "", category: null };
+  return { isAdding: false, name: "", category: null, editingScheduleId: null };
 }
 
 function saveNewScheduleDraft(draft: NewScheduleDraft) {
   sessionStorage.setItem(NEW_SCHEDULE_DRAFT_KEY, JSON.stringify(draft));
 }
 
-export const useSettings = create<SettingsStore>((set) => ({
-  settings: loadSettings(),
-  updateIsDark: (isDark) =>
-    set((state) => {
-      const settings = new Map(state.settings);
-      settings.set("isDark", isDark);
-      localStorage.setItem(SETTING_KEY, JSON.stringify([...settings]));
-
-      return { settings };
-    }),
-}));
 const initialCategories = loadCategories();
 const initialHomeSchedules = loadSchedules(
   HOME_SCHEDULE_KEY,
@@ -302,7 +261,7 @@ export const useArchiveSchedules = create<ArchiveScheduleStore>((set) => ({
       const id = getNextScheduleId();
       const schedules = [...state.schedules, { ...schedule, id }];
 
-      localStorage.setItem(HOME_SCHEDULE_KEY, JSON.stringify(schedules));
+      localStorage.setItem(ARCHIVE_SCHEDULE_KEY, JSON.stringify(schedules));
 
       return { schedules };
     }),
@@ -334,8 +293,27 @@ export const useNewScheduleDraft = create<NewScheduleDraftStore>((set) => ({
   ...initialNewScheduleDraft,
   open: () =>
     set((state) => {
-      saveNewScheduleDraft({ ...state, isAdding: true });
-      return { isAdding: true };
+      const next = {
+        ...state,
+        isAdding: true,
+        name: state.editingScheduleId === null ? state.name : "",
+        category: state.editingScheduleId === null ? state.category : null,
+        editingScheduleId: null,
+      };
+      saveNewScheduleDraft(next);
+      return next;
+    }),
+  edit: (schedule) =>
+    set((state) => {
+      const next = {
+        ...state,
+        isAdding: true,
+        name: schedule.name,
+        category: schedule.category,
+        editingScheduleId: schedule.id,
+      };
+      saveNewScheduleDraft(next);
+      return next;
     }),
   close: () =>
     set((state) => {
@@ -354,22 +332,30 @@ export const useNewScheduleDraft = create<NewScheduleDraftStore>((set) => ({
     }),
   clear: () =>
     set(() => {
-      const emptyDraft = { isAdding: false, name: "", category: null };
+      const emptyDraft = {
+        isAdding: false,
+        name: "",
+        category: null,
+        editingScheduleId: null,
+      };
       saveNewScheduleDraft(emptyDraft);
       return emptyDraft;
     }),
 }));
 
 export function resetApplicationData() {
-  localStorage.removeItem(SETTING_KEY);
   localStorage.removeItem(CATEGORY_KEY);
   localStorage.removeItem(HOME_SCHEDULE_KEY);
   localStorage.removeItem(ARCHIVE_SCHEDULE_KEY);
   sessionStorage.removeItem(NEW_SCHEDULE_DRAFT_KEY);
 
-  useSettings.setState({ settings: new Map(defaultSettings) });
   useCategories.setState({ categories: [...defaultCategories] });
   useHomeSchedules.setState({ schedules: [] });
   useArchiveSchedules.setState({ schedules: [] });
-  useNewScheduleDraft.setState({ isAdding: false, name: "", category: null });
+  useNewScheduleDraft.setState({
+    isAdding: false,
+    name: "",
+    category: null,
+    editingScheduleId: null,
+  });
 }

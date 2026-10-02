@@ -1,0 +1,1 @@
+Do not edit `src/components/ui/` and its files

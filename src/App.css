@@ -13,12 +13,20 @@
 }
 
 main {
-  margin: 3rem 8rem 5rem;
+  width: min(100% - 2rem, 80rem);
+  margin: 3rem auto 5rem;
   display: grid;
   gap: 0.5rem;
 }
 
-#home-main {
+@media (min-width: 48rem) {
+  main {
+    width: min(100% - 4rem, 80rem);
+  }
+}
+
+#home-main,
+#archive-main {
   grid-template-rows: auto auto minmax(0, 1fr);
 }
 
@@ -36,6 +44,10 @@ h2 {
 h2 + p {
   margin-top: 0rem;
   font-size: large;
+}
+
+[data-slot="toast-close"] {
+  display: none;
 }
 
 @theme inline {

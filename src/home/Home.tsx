@@ -9,18 +9,26 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Item, ItemContent, ItemGroup, ItemTitle } from "@/components/ui/item";
-import type { Schedule } from "./constants";
-import Head from "./Head";
-import NewScheduleModal from "./NewScheduleModal";
+import Head from "../components/Head";
+import type { Schedule } from "../constants";
+import {
+  cyanSurfaceVariants,
+  scheduleCategoryBadgeVariants,
+  scheduleItemVariants,
+} from "../lib/app-variants";
+import { cn } from "../lib/utils";
 import {
   useArchiveSchedules,
   useCategories,
   useHomeSchedules,
-} from "./storage";
+  useNewScheduleDraft,
+} from "../storage";
+import ScheduleEditorModal from "./ScheduleEditorModal";
 
 function HomeScheduleCard({ schedule }: { schedule: Schedule }) {
   const editSchedule = useHomeSchedules((state) => state.editSchedule);
   const deleteSchedule = useHomeSchedules((state) => state.deleteSchedule);
+  const editDraft = useNewScheduleDraft((state) => state.edit);
   const archiveSchedule = useArchiveSchedules((state) => state.addSchedule);
   const categories = useCategories((state) => state.categories);
   const category = categories.find((category) => {
@@ -28,9 +36,24 @@ function HomeScheduleCard({ schedule }: { schedule: Schedule }) {
   });
 
   return (
-    <Item className="flex-row p-4 bg-cyan-300">
+    <Item
+      className={scheduleItemVariants({ layout: "home" })}
+      role="button"
+      tabIndex={0}
+      onClick={() => editDraft(schedule)}
+      onKeyDown={(event) => {
+        if (
+          event.target === event.currentTarget &&
+          (event.key === "Enter" || event.key === " ")
+        ) {
+          event.preventDefault();
+          editDraft(schedule);
+        }
+      }}
+    >
       <Checkbox
         checked={schedule.isDone}
+        onClick={(event) => event.stopPropagation()}
         onCheckedChange={(checked) =>
           editSchedule({
             ...schedule,
@@ -38,28 +61,35 @@ function HomeScheduleCard({ schedule }: { schedule: Schedule }) {
             doneDate: checked === true ? new Date() : null,
           })
         }
-        className={"bg-white"}
+        className="bg-background"
       />
-      <ItemTitle className="text-base">{schedule.name}</ItemTitle>
+      <ItemTitle
+        className={`text-base ${schedule.isDone ? "line-through" : ""}`}
+      >
+        {schedule.name}
+      </ItemTitle>
       <ItemContent className="relative flex-row items-center justify-end">
         {schedule.isDone && (
           <Button
             render={
               <button
                 type="button"
-                onClick={() => {
+                onClick={(event) => {
+                  event.stopPropagation();
                   archiveSchedule(schedule);
                   deleteSchedule(schedule.id);
                 }}
               />
             }
-            className="absolute right-16 w-16 bg-gray-400 text-gray-900"
+            className="absolute right-16 w-16 cursor-pointer bg-gray-400 text-gray-900 hover:text-white dark:bg-slate-600 dark:text-slate-50 dark:hover:bg-slate-500"
           >
             보관하기
           </Button>
         )}
         {category && (
-          <Badge className="ml-auto px-2 py-3 bg-cyan-700">
+          <Badge
+            className={scheduleCategoryBadgeVariants({ placement: "inline" })}
+          >
             {category.name}
           </Badge>
         )}
@@ -71,7 +101,10 @@ function HomeScheduleCard({ schedule }: { schedule: Schedule }) {
 function HomeSchedules() {
   const schedules = useHomeSchedules((state) => state.schedules);
   return (
-    <Card id="schedules" className="min-h-0 border-none bg-cyan-100">
+    <Card
+      id="schedules"
+      className={cn("min-h-0 border-none", cyanSurfaceVariants())}
+    >
       <CardContent className="min-h-0 flex-1">
         {schedules.length === 0 ? (
           <Empty>
@@ -102,7 +135,7 @@ function Home() {
         <h2>할 일 리스트</h2>
         <p>오늘 해야 할 일을 기록하고 관리해 보세요.</p>
         <HomeSchedules />
-        <NewScheduleModal />
+        <ScheduleEditorModal />
       </main>
     </div>
   );
