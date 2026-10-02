@@ -27,7 +27,7 @@ export const scheduleCategoryBadgeVariants = cva(
 export const cyanSurfaceVariants = cva("bg-cyan-200 dark:bg-slate-800");
 
 export const archiveFilterButtonVariants = cva(
-  "w-12 cursor-pointer bg-secondary hover:bg-accent",
+  "w-12 cursor-pointer bg-secondary hover:bg-gray-300 dark:hover:bg-gray-800",
   {
     variants: {
       control: {
