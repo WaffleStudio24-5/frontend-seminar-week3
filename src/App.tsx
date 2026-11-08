@@ -20,6 +20,7 @@ type ArchivedTodo = {
 function App() {
   const [isOpen, setIsOpen] = useState(false);
   const { isDark, toggleDark, resetDark } = useTheme();
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
 
   const [title, setTitle] = useState(() => {
     const savedTitle = sessionStorage.getItem("title");
@@ -62,6 +63,10 @@ function App() {
     "전체",
   );
 
+  const [archiveOrder, setArchiveOrder] = useState<"최신순" | "오래된순">(
+    "최신순",
+  );
+
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
@@ -79,15 +84,29 @@ function App() {
   }, [category]);
 
   const handleSave = () => {
-    const newTodo: Todo = {
-      id: Date.now(),
-      title: title,
-      category: category,
-      createdAt: new Date().toISOString(),
-      completed: false,
-    };
-
-    setTodos([...todos, newTodo]);
+    if (editingTodo) {
+      const updatedTodos = todos.map((todo) => {
+        if (todo.id === editingTodo.id) {
+          return {
+            ...todo,
+            title: title,
+            category: category,
+          };
+        }
+        return todo;
+      });
+      setTodos(updatedTodos);
+    } else {
+      const newTodo: Todo = {
+        id: Date.now(),
+        title: title,
+        category: category,
+        createdAt: new Date().toISOString(),
+        completed: false,
+      };
+      setTodos([...todos, newTodo]);
+    }
+    setEditingTodo(null);
     setTitle("");
     setCategory("공부");
     setIsOpen(false);
@@ -136,6 +155,18 @@ function App() {
     }
 
     return todo.category === filter;
+  });
+
+  const sortedArchive = [...archive].sort((a, b) => {
+    if (archiveOrder === "최신순") {
+      return (
+        new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+      );
+    }
+
+    return (
+      new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime()
+    );
   });
 
   return (
@@ -250,7 +281,33 @@ function App() {
             }
           >
             <h2 className="mb-6 text-xl font-bold">보관함</h2>
-            {archive.map((archivedTodo) => (
+            <div className="mb-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setArchiveOrder("최신순")}
+                className={
+                  isDark
+                    ? "rounded-full bg-gray-800 px-4 py-2 text-gray-200"
+                    : "rounded-full bg-gray-100 px-4 py-2 text-black"
+                }
+              >
+                최신순
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setArchiveOrder("오래된순")}
+                className={
+                  isDark
+                    ? "rounded-full bg-gray-800 px-4 py-2 text-gray-200"
+                    : "rounded-full bg-gray-100 px-4 py-2 text-black"
+                }
+              >
+                오래된순
+              </button>
+            </div>
+
+            {sortedArchive.map((archivedTodo) => (
               <div
                 key={archivedTodo.id}
                 className={
@@ -313,9 +370,22 @@ function App() {
             checked={todo.completed}
             onChange={() => handleToggle(todo.id)}
           />
-          <span className={todo.completed ? "flex-1 line-through" : "flex-1"}>
-            {todo.title}{" "}
-          </span>
+          <button
+            type="button"
+            className={
+              todo.completed
+                ? "flex-1 text-left line-through"
+                : "flex-1 text-left"
+            }
+            onClick={() => {
+              setEditingTodo(todo);
+              setTitle(todo.title);
+              setCategory(todo.category);
+              setIsOpen(true);
+            }}
+          >
+            {todo.title}
+          </button>
           <span
             className={
               isDark
@@ -355,7 +425,7 @@ function App() {
                 : "w-full max-w-md rounded-2xl bg-white p-6 text-black shadow-xl"
             }
           >
-            <h2>할일 추가하기</h2>
+            <h2>{editingTodo ? "할일 수정하기" : "할일 추가하기"}</h2>
             <input
               type="text"
               className={
@@ -397,6 +467,7 @@ function App() {
                   setIsOpen(false);
                   setTitle("");
                   setCategory("공부");
+                  setEditingTodo(null);
                 }}
               >
                 취소{" "}
@@ -406,7 +477,7 @@ function App() {
                 className="rounded-xl bg-black px-4 py-2 text-white hover:bg-gray-800"
                 onClick={handleSave}
               >
-                저장{" "}
+                {editingTodo ? "수정 완료" : "저장"}
               </button>
             </div>
           </div>
