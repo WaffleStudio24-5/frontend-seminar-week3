@@ -1,78 +1,171 @@
-export interface Draft { title: string; category: string }
-export interface Task extends Draft { id: string; createdAt: string; completed: boolean; completedAt: string | null }
-export interface AppState { todos: Task[]; archive: Task[]; theme: 'light' | 'dark' }
+export interface Draft {
+  title: string;
+  category: string;
+}
+export interface Task extends Draft {
+  id: string;
+  createdAt: string;
+  completed: boolean;
+  completedAt: string | null;
+}
+export interface AppState {
+  todos: Task[];
+  archive: Task[];
+  theme: "light" | "dark";
+}
 export type Action =
-  | { type: 'save'; draft: Draft; editId?: string; id?: string; now?: string }
-  | { type: 'toggle'; id: string; now: string }
-  | { type: 'archive'; id: string }
-  | { type: 'theme' };
+  | { type: "save"; draft: Draft; editId?: string; id?: string; now?: string }
+  | { type: "toggle"; id: string; now: string }
+  | { type: "archive"; id: string }
+  | { type: "theme" };
 
-export const CATEGORIES = ['공부', '운동', '집안일'];
-export const DATA_KEY = 'waffle-week3:data:v1';
-export const DRAFT_KEY = 'waffle-week3:drafts:v1';
-export const emptyState = (): AppState => ({ todos: [], archive: [], theme: 'light' });
-export const emptyDraft = (): Draft => ({ title: '', category: '공부' });
+export const CATEGORIES = ["공부", "운동", "집안일"];
+export const DATA_KEY = "waffle-week3:data:v1";
+export const DRAFT_KEY = "waffle-week3:drafts:v1";
+export const emptyState = (): AppState => ({
+  todos: [],
+  archive: [],
+  theme: "light",
+});
+export const emptyDraft = (): Draft => ({ title: "", category: "공부" });
 
-const validDate = (value: unknown) => typeof value === 'string' && Number.isFinite(Date.parse(value));
-const validTask = (task: Task) => task && typeof task.id === 'string' && typeof task.title === 'string'
-  && task.title.trim().length > 0 && task.title.length <= 200 && CATEGORIES.includes(task.category)
-  && validDate(task.createdAt) && typeof task.completed === 'boolean'
-  && (task.completed ? validDate(task.completedAt) : task.completedAt === null);
+const validDate = (value: unknown) =>
+  typeof value === "string" && Number.isFinite(Date.parse(value));
+const validTask = (task: Task) =>
+  task &&
+  typeof task.id === "string" &&
+  typeof task.title === "string" &&
+  task.title.trim().length > 0 &&
+  task.title.length <= 200 &&
+  CATEGORIES.includes(task.category) &&
+  validDate(task.createdAt) &&
+  typeof task.completed === "boolean" &&
+  (task.completed ? validDate(task.completedAt) : task.completedAt === null);
 
 export function parseState(raw: string | null): AppState {
   if (!raw) return emptyState();
   const value = JSON.parse(raw);
-  if (!value || !Array.isArray(value.todos) || !Array.isArray(value.archive)
-    || !['light', 'dark'].includes(value.theme) || !value.todos.every(validTask)
-    || !value.archive.every((task) => validTask(task) && task.completed)) {
-    throw new Error('저장된 할 일 데이터의 형식이 올바르지 않습니다.');
+  if (
+    !value ||
+    !Array.isArray(value.todos) ||
+    !Array.isArray(value.archive) ||
+    !["light", "dark"].includes(value.theme) ||
+    !value.todos.every(validTask) ||
+    !value.archive.every((task) => validTask(task) && task.completed)
+  ) {
+    throw new Error("저장된 할 일 데이터의 형식이 올바르지 않습니다.");
   }
   const ids = [...value.todos, ...value.archive].map((task) => task.id);
-  if (new Set(ids).size !== ids.length) throw new Error('중복된 할 일이 있습니다.');
+  if (new Set(ids).size !== ids.length)
+    throw new Error("중복된 할 일이 있습니다.");
   return { todos: value.todos, archive: value.archive, theme: value.theme };
 }
 
 export function parseDrafts(raw: string | null): Record<string, Draft> {
   if (!raw) return {};
   const value = JSON.parse(raw);
-  if (!value || typeof value !== 'object' || Array.isArray(value)
-    || !Object.values(value as Record<string, Draft>).every((draft) => draft && typeof draft.title === 'string'
-      && draft.title.length <= 200 && CATEGORIES.includes(draft.category))) throw new Error('임시 저장 내용을 읽을 수 없습니다.');
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    !Object.values(value as Record<string, Draft>).every(
+      (draft) =>
+        draft &&
+        typeof draft.title === "string" &&
+        draft.title.length <= 200 &&
+        CATEGORIES.includes(draft.category),
+    )
+  )
+    throw new Error("임시 저장 내용을 읽을 수 없습니다.");
   return value;
 }
 
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
-    case 'save': {
+    case "save": {
       const title = action.draft.title.trim();
-      if (!title || title.length > 200 || !CATEGORIES.includes(action.draft.category)) return state;
-      if (action.editId) return { ...state, todos: state.todos.map((task) => task.id === action.editId
-        ? { ...task, title, category: action.draft.category } : task) };
-      if (!action.id || [...state.todos, ...state.archive].some((task) => task.id === action.id) || !validDate(action.now)) return state;
-      return { ...state, todos: [{ id: action.id, title, category: action.draft.category,
-        createdAt: action.now, completed: false, completedAt: null }, ...state.todos] };
+      if (
+        !title ||
+        title.length > 200 ||
+        !CATEGORIES.includes(action.draft.category)
+      )
+        return state;
+      if (action.editId)
+        return {
+          ...state,
+          todos: state.todos.map((task) =>
+            task.id === action.editId
+              ? { ...task, title, category: action.draft.category }
+              : task,
+          ),
+        };
+      if (
+        !action.id ||
+        [...state.todos, ...state.archive].some(
+          (task) => task.id === action.id,
+        ) ||
+        !validDate(action.now)
+      )
+        return state;
+      return {
+        ...state,
+        todos: [
+          {
+            id: action.id,
+            title,
+            category: action.draft.category,
+            createdAt: action.now,
+            completed: false,
+            completedAt: null,
+          },
+          ...state.todos,
+        ],
+      };
     }
-    case 'toggle':
+    case "toggle":
       if (!validDate(action.now)) return state;
-      return { ...state, todos: state.todos.map((task) => task.id === action.id
-        ? { ...task, completed: !task.completed, completedAt: task.completed ? null : action.now } : task) };
-    case 'archive': {
-      const task = state.todos.find((item) => item.id === action.id && item.completed);
+      return {
+        ...state,
+        todos: state.todos.map((task) =>
+          task.id === action.id
+            ? {
+                ...task,
+                completed: !task.completed,
+                completedAt: task.completed ? null : action.now,
+              }
+            : task,
+        ),
+      };
+    case "archive": {
+      const task = state.todos.find(
+        (item) => item.id === action.id && item.completed,
+      );
       if (!task) return state;
-      return { ...state, todos: state.todos.filter((item) => item.id !== task.id), archive: [task, ...state.archive] };
+      return {
+        ...state,
+        todos: state.todos.filter((item) => item.id !== task.id),
+        archive: [task, ...state.archive],
+      };
     }
-    case 'theme': return { ...state, theme: state.theme === 'light' ? 'dark' : 'light' };
-    default: return state;
+    case "theme":
+      return { ...state, theme: state.theme === "light" ? "dark" : "light" };
+    default:
+      return state;
   }
 }
 
 // Local calendar date, rather than UTC, so Korean dates match the date picker.
 function dateKey(iso: string) {
   const date = new Date(iso);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function selectArchive(archive: Task[], date: string, order = 'desc') {
-  return archive.filter((task) => !date || dateKey(task.completedAt) === date)
-    .sort((a, b) => (Date.parse(a.completedAt) - Date.parse(b.completedAt)) * (order === 'asc' ? 1 : -1));
+export function selectArchive(archive: Task[], date: string, order = "desc") {
+  return archive
+    .filter((task) => !date || dateKey(task.completedAt) === date)
+    .sort(
+      (a, b) =>
+        (Date.parse(a.completedAt) - Date.parse(b.completedAt)) *
+        (order === "asc" ? 1 : -1),
+    );
 }
