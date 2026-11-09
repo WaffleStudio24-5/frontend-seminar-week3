@@ -71,6 +71,7 @@ function Modal({
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = ref.current;
+    if (!dialog) return;
     const previous = document.activeElement;
     dialog.showModal();
     dialog.querySelector<HTMLInputElement>("input")?.focus();
@@ -276,9 +277,7 @@ function TodoList({ onEdit }: { onEdit: (task: Task) => void }) {
           완료 {completed} / {state.todos.length}
         </span>
       </div>
-      <div
-        className="mb-6 flex flex-wrap gap-2"
-      >
+      <div className="mb-6 flex flex-wrap gap-2">
         {["전체", ...CATEGORIES].map((category) => (
           <button
             type="button"

@@ -47,7 +47,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     read("localStorage", DATA_KEY, parseState, emptyState),
   );
   const [initialDrafts] = useState(() =>
-    read("sessionStorage", DRAFT_KEY, parseDrafts, () => ({})),
+    read<Record<string, Draft>>("sessionStorage", DRAFT_KEY, parseDrafts, () => ({})),
   );
   const [state, setState] = useState(initial.value);
   const [drafts, setDrafts] = useState(initialDrafts.value);

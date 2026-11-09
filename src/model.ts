@@ -29,7 +29,7 @@ export const emptyState = (): AppState => ({
 });
 export const emptyDraft = (): Draft => ({ title: "", category: "공부" });
 
-const validDate = (value: unknown) =>
+const validDate = (value: unknown): value is string =>
   typeof value === "string" && Number.isFinite(Date.parse(value));
 const validTask = (task: Task) =>
   task &&
@@ -51,7 +51,7 @@ export function parseState(raw: string | null): AppState {
     !Array.isArray(value.archive) ||
     !["light", "dark"].includes(value.theme) ||
     !value.todos.every(validTask) ||
-    !value.archive.every((task) => validTask(task) && task.completed)
+    !value.archive.every((task: Task) => validTask(task) && task.completed)
   ) {
     throw new Error("저장된 할 일 데이터의 형식이 올바르지 않습니다.");
   }
@@ -162,6 +162,7 @@ function dateKey(iso: string) {
 
 export function selectArchive(archive: Task[], date: string, order = "desc") {
   return archive
+    .filter((task): task is Task & { completedAt: string } => task.completed && validDate(task.completedAt))
     .filter((task) => !date || dateKey(task.completedAt) === date)
     .sort(
       (a, b) =>
