@@ -58,3 +58,31 @@
 - `yarn dev` — 개발 서버를 실행합니다.
 - `yarn check-all` — 타입, 포맷, 미사용 코드 검사를 실행합니다.
 - `yarn build` — 프로덕션 빌드를 생성합니다.
+
+
+
+## 구현 및 실행 안내
+
+Node 버전은 `.nvmrc`, Yarn 버전은 `packageManager` 설정을 사용합니다.
+
+```bash
+corepack enable
+yarn install --immutable
+yarn dev
+```
+
+`yarn test`는 단위 테스트, `yarn test:e2e`는 Playwright 시나리오를 실행합니다. 브라우저 테스트 전에 `yarn playwright install chromium`을 실행하세요.
+
+### 스토리지 선택 이유
+
+- 진행 중인 할 일과 보관함: 브라우저를 다시 열어도 유지되어야 하므로 localStorage를 사용했습니다. 두 목록을 하나의 스냅샷으로 저장해 보관 중 중복이나 누락이 생기지 않게 했습니다.
+- 작성 중인 입력: sessionStorage로 같은 탭의 새로고침 및 모달 닫기 후 복원합니다. 취소 또는 저장 시 해당 초안을 삭제하고, 새 할 일과 수정 중인 할 일의 초안을 분리합니다.
+- 다크 모드: 재접속 후에도 유지할 작은 설정값이므로 localStorage에 저장합니다.
+
+### 전역 상태 선택 이유
+
+React Context로 할 일·보관함·테마를 화면 간 공유합니다. Provider에 저장소 처리를 모으고 순수 reducer로 상태 변경을 분리해 props drilling을 피하고 테스트하기 쉽게 했습니다. 모달 표시 및 필터 등 화면 내부 상태는 useState로 유지합니다.
+
+### 추가 구현
+
+기존 할 일 수정, 보관함 완료일 검색/정렬, 모바일 화면, 저장 실패 안내, 초기화 확인 창을 구현했습니다. 데이터는 브라우저에만 저장되며 여러 탭의 동시 수정 병합과 기기 간 동기화는 지원하지 않습니다.
