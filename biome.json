@@ -6,12 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**",
-      "!!**/dist",
-      "!!**/.yarn",
-      "!!**/node_modules"
-    ]
+    "includes": ["**", "!!**/dist", "!!**/.yarn", "!!**/node_modules"]
   },
   "formatter": {
     "enabled": true,

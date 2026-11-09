@@ -83,7 +83,12 @@ function Modal({
     <dialog
       ref={ref}
       aria-labelledby="dialog-title"
-      onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); onClose(); } }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onClose();
+        }
+      }}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -271,7 +276,9 @@ function TodoList({ onEdit }: { onEdit: (task: Task) => void }) {
           완료 {completed} / {state.todos.length}
         </span>
       </div>
-      <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="카테고리 필터">
+      <div
+        className="mb-6 flex flex-wrap gap-2"
+      >
         {["전체", ...CATEGORIES].map((category) => (
           <button
             type="button"
