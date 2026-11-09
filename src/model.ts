@@ -162,7 +162,10 @@ function dateKey(iso: string) {
 
 export function selectArchive(archive: Task[], date: string, order = "desc") {
   return archive
-    .filter((task): task is Task & { completedAt: string } => task.completed && validDate(task.completedAt))
+    .filter(
+      (task): task is Task & { completedAt: string } =>
+        task.completed && validDate(task.completedAt),
+    )
     .filter((task) => !date || dateKey(task.completedAt) === date)
     .sort(
       (a, b) =>
