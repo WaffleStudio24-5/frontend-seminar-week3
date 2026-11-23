@@ -9,5 +9,10 @@
     "enabled": true,
     "actions": { "source": { "organizeImports": "on" } }
   },
-  "linter": { "enabled": true }
+  "linter": { "enabled": true },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
 }
