@@ -86,8 +86,8 @@ function App() {
   }
 
   return (
-    <main className="relative mx-auto grid min-h-screen w-full max-w-[960px] content-start gap-0 bg-(--color-primary) pb-24 text-(--color-opposite)">
-      <header className="sticky top-0 z-10 flex min-h-16 items-center justify-between gap-4 bg-(--color-opposite) px-4 py-3 text-(--color-primary) shadow-sm sm:px-8">
+    <main className="relative mx-auto grid min-h-screen w-full content-start gap-0 bg-(--color-primary) pb-24 text-(--color-opposite)">
+      <header className="w-full sticky top-0 z-10 flex min-h-16 items-center justify-between gap-4 bg-(--color-opposite) px-4 py-3 text-(--color-primary) shadow-sm sm:px-8">
         <div className="mr-auto text-lg font-bold tracking-tight">
           오늘 뭐하지
         </div>
